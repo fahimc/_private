@@ -3,67 +3,109 @@
 <head>
 	<title></title>
 	<script type="text/javascript">
-		(function(){
-			var scopes={};
-			var _private=function(scope){
-				if(!scope)
-				{
-					return {
-						clean:function(scope){
-							if(scopes[scope])delete scopes[scope];
-						}
-					};
-				}
-				if(!scopes[scope])scopes[scope]={};
-				return scopes[scope];
-			};
-
-
-			window._private=_private;
-		})();
-
-
-		var Test = function(){
-			_private(this).x = 30;
-			_private(this).setX=function(val){
-				_private(this).x=val;	
-			};
-			this.getX=function(){
-				return _private(this).x;			
+	(function(){
+		var scopes={};
+		var scopeIndex=0;
+		var _Private=function(scope){
+			if(!scope)
+			{
+				return {
+					clean:clean
+				};
 			}
-			this.publicSetX=function(x){
-				_private(this).setX(x);
-			},
-			this.destroy=function(){
-				_private().clean(this);
+			// if(!scope._pid)
+			// {
+				scope._pid = scopeIndex++;
+				scopes[scope._pid]={
+					clean:clean
+				};
+			// }
+			function clean(scope){
+				if(scopes[scope._pid])delete scopes[scope._pid];
+			};
+			return scopes[scope._pid];
+		};
+		var internal=function(scope){
+			if(!scope)
+			{
+				return {
+					clean:clean
+				};
 			}
+			if(!scope._pid)
+			{
+				scope._pid = scopeIndex++;
+				scopes[scope._pid]={
+					clean:clean
+				};
+			}
+			function clean(scope){
+				if(scopes[scope._pid])delete scopes[scope._pid];
+			};
+			return scopes[scope._pid];
+		};
+
+
+
+		window._Private=_Private;
+		window.internal=internal;
+	})();
+
+
+	var Test = function(){
+		var _private = _Private(this);
+		_private.x = 30;
+		_private.setX=function(val){
+			_private.x=val;	
+		};
+		this.getX=function(){
+			return _private.x;			
+		}
+		this.publicSetX=function(x){
+			_private.setX(x);
+		},
+		this.destroy=function(){
+			_private.clean(this);
+			console.log('_private',_private);
+		}
+	}
+
+	var Test2 =
+	{
+		construct:function(){
+			internal(this).x=20;
+			internal(this).y=30;
+			this._privateMethods();
+		},
+		_privateMethods:function(){
+			var _this =this;
+			internal(this).setX=function(x){
+				internal(_this).x=x;	
+			}
+			console.log(internal(this));
+		},
+		updateX:function(){
+			internal(this).setX(200);
+		},
+		getX:function(x){
+			return internal(this).x;
 		}
 
-		var Test2 =
-		{
-			construct:function(){
-				_private(this).x=20;
-				_private(this).y=30;
-			},
-			_privateMethods:function(){
-				_private(this).setX=function(x){
-					_private(this).x=x;	
-				}
-			},
-			updateX:function(){
-				_private(this).setX(200);
-			},
-			getX:function(x){
-				return _private(this).x;
-			}
+	};
 
-		}
+	Test2.construct();
 
-		var test = new Test();
+	var test = new Test();
+	var test2 = new Test();
 
-		console.log(test.publicSetX(200));	
-		console.log(test.getX());	
-		console.log(_private(test));	
+	console.log(test.publicSetX(200));	
+	console.log(_Private(test));	
+	console.log(test.getX());	
+	console.log(_Private(test2).x=1);	
+	console.log(test2.getX());	
+	console.log();	
+	console.log(Test2.updateX());	
+	console.log(Test2.updateX());	
 	</script>
 	
 </head>
