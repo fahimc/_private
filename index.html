@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title></title>
+	<script type="text/javascript">
+		(function(){
+			var scopes={};
+			var _private=function(scope){
+				if(!scope)
+				{
+					return {
+						clean:function(scope){
+							if(scopes[scope])delete scopes[scope];
+						}
+					};
+				}
+				if(!scopes[scope])scopes[scope]={};
+				return scopes[scope];
+			};
+
+
+			window._private=_private;
+		})();
+
+
+		var Test = function(){
+			_private(this).x = 30;
+			_private(this).setX=function(val){
+				_private(this).x=val;	
+			};
+			this.getX=function(){
+				return _private(this).x;			
+			}
+			this.publicSetX=function(x){
+				_private(this).setX(x);
+			},
+			this.destroy=function(){
+				_private().clean(this);
+			}
+		}
+
+		var Test2 =
+		{
+			construct:function(){
+				_private(this).x=20;
+				_private(this).y=30;
+			},
+			_privateMethods:function(){
+				_private(this).setX=function(x){
+					_private(this).x=x;	
+				}
+			},
+			updateX:function(){
+				_private(this).setX(200);
+			},
+			getX:function(x){
+				return _private(this).x;
+			}
+
+		}
+
+		var test = new Test();
+
+		console.log(test.publicSetX(200));	
+		console.log(test.getX());	
+		console.log(_private(test));	
+	</script>
+	
+</head>
+<body>
+
+</body>
+</html>
